@@ -24,14 +24,16 @@ async function getWeather() {
         alert('Failed to fetch weather data.');
     }
 }
-
-function displayCurrentWeather(data) {
-    console.log(data);
+async function displayCurrentWeather(data) {
     const weatherBody = document.getElementById('weatherBody');
+
+    const fetchh = await fetch(`https://restcountries.com/v3.1/alpha/${data.sys.country}`);
+    const countryData = await fetchh.json();
+    console.log(countryData[0].name.common)
     weatherBody.innerHTML = `
         <tr>
             <td>${data.name}</td>
-            <td>${data.sys.country}</td>
+            <td>${countryData[0].name.common}</td>
             <td>${data.main.temp}°C</td>
             <td>${data.weather[0].description}</td>
         </tr>
