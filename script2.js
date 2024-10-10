@@ -1,40 +1,58 @@
-const url =
-	'https://api.openweathermap.org/data/2.5/weather';
-const apiKey =
-	'f00c38e0279b7bc85480c3fe775d518c';
+const API_KEY = '206386da85fabf1ffb7fc200cf61c0e0';
+const BASE_URL = 'https://api.openweathermap.org/data/2.5/';
 
-$(document).ready(function () {
-	weatherFn('anand');
-});
+async function getWeather() {
+    const city = document.getElementById('cityInput').value;
+    if (!city) {
+        alert('Please enter a city name.');
+        return;
+    }
 
-async function weatherFn(cName) {
-	const temp =
-		`${url}?q=${cName}&appid=${apiKey}&units=metric`;
-	try {
-		const res = await fetch(temp);
-		const data = await res.json();
-		if (res.ok) {
-			weatherShowFn(data);
-		} else {
-			alert('City not found. Please try again.');
-		}
-	} catch (error) {
-		console.error('Error fetching weather data:', error);
-	}
+    try {
+        // Fetch current weather
+        const weatherResponse = await fetch(`${BASE_URL}weather?q=${city}&appid=${API_KEY}&units=metric`);
+        const weatherData = await weatherResponse.json();
+        displayCurrentWeather(weatherData);
+
+        // Fetch 5-day forecast
+        const forecastResponse = await fetch(`${BASE_URL}forecast?q=${city}&appid=${API_KEY}&units=metric`);
+        const forecastData = await forecastResponse.json();
+        displayForecast(forecastData);
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        alert('Failed to fetch weather data.');
+    }
 }
 
-function weatherShowFn(data) {
-	$('#city-name').text(data.name);
-	$('#date').text(moment().
-		format('MMMM Do YYYY, h:mm:ss a'));
-	$('#temperature').
-		html(`${data.main.temp}°C`);
-	$('#description').
-		text(data.weather[0].description);
-	$('#wind-speed').
-		html(`Wind Speed: ${data.wind.speed} m/s`);
-	$('#weather-icon').
-		attr('src',
-			`...`);
-	$('#weather-info').fadeIn();
+function displayCurrentWeather(data) {
+    console.log(data);
+    const weatherBody = document.getElementById('weatherBody');
+    weatherBody.innerHTML = `
+        <tr>
+            <td>${data.name}</td>
+            <td>${data.sys.country}</td>
+            <td>${data.main.temp}°C</td>
+            <td>${data.weather[0].description}</td>
+        </tr>
+    `;
+}
+
+function displayForecast(data) {
+    const forecastBody = document.getElementById('forecastBody');
+    forecastBody.innerHTML = '';
+
+    // Forecast data comes in 3-hour intervals, so we'll filter to get daily forecasts
+    const dailyForecasts = data.list.filter(item => item.dt_txt.includes('12:00:00'));
+    dailyForecasts.forEach(forecast => {
+        const date = new Date(forecast.dt_txt).toLocaleDateString();
+        forecastBody.innerHTML += `
+            <tr>
+                <td>${date}</td>
+                <td>${forecast.main.temp}°C</td>
+                <td><img src="https://openweathermap.org/img/wn/${forecast.weather[0].icon}@2x.png" class="forcast-image"></td>
+                <td>${forecast.weather[0].description}</td>
+            </tr>
+        `;
+    });
 }
